@@ -1,6 +1,5 @@
 spring:
   application:
     name: smart-traffic-management
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/traffic_management
+  mongodb:
+    uri: mongodb://localhost:27017/traffic_management
