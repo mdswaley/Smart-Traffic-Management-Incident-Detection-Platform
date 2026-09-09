@@ -20,6 +20,7 @@ public class TrafficController {
         return trafficService.saveEvent(event);
     }
 
+
     @GetMapping("/intersections/{id}/events")
     public Flux<TrafficEvent> getEvents(@PathVariable String id) {
         return trafficService.getEvents(id);
