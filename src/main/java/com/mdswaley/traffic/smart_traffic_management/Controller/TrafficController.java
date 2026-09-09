@@ -1,6 +1,7 @@
 package com.mdswaley.traffic.smart_traffic_management.Controller;
 
 import com.mdswaley.traffic.smart_traffic_management.Model.TrafficEvent;
+import com.mdswaley.traffic.smart_traffic_management.Model.TrafficStatus;
 import com.mdswaley.traffic.smart_traffic_management.Service.TrafficService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,5 +23,10 @@ public class TrafficController {
     @GetMapping("/intersections/{id}/events")
     public Flux<TrafficEvent> getEvents(@PathVariable String id) {
         return trafficService.getEvents(id);
+    }
+
+    @GetMapping("/status/{intersectionId}")
+    public Mono<TrafficStatus> getTrafficStatus(@PathVariable String intersectionId) {
+        return trafficService.getTrafficStatus(intersectionId);
     }
 }

@@ -1,5 +1,9 @@
 spring:
   application:
     name: smart-traffic-management
+  devtools:
+    restart:
+      enabled: true
+
   mongodb:
     uri: mongodb://localhost:27017/traffic_management
