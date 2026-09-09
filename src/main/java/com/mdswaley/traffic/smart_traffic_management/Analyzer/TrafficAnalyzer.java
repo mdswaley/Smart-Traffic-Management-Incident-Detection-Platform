@@ -3,17 +3,18 @@ package com.mdswaley.traffic.smart_traffic_management.Analyzer;
 import com.mdswaley.traffic.smart_traffic_management.Model.TrafficEvent;
 import com.mdswaley.traffic.smart_traffic_management.Model.TrafficStatus;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 @Component
 public class TrafficAnalyzer {
 
-    public TrafficStatus analyze(TrafficEvent event) {
+    public Mono<TrafficStatus> analyze(TrafficEvent event) {
 
         double score = calculateScore(event);
 
         String status = determineStatus(score);
 
-        return new TrafficStatus(
+        TrafficStatus status1 = new TrafficStatus(
                 event.getIntersectionId(),
                 status,
                 score,
@@ -21,6 +22,8 @@ public class TrafficAnalyzer {
                 event.getWaitingVehicles(),
                 event.getAverageSpeed()
         );
+
+        return Mono.just(status1);
     }
 
     private double calculateScore(TrafficEvent event) {
