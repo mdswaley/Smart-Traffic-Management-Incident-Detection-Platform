@@ -12,4 +12,6 @@ public interface TrafficService {
     Flux<TrafficEvent> getEvents(String intersectionId);
 
     Mono<TrafficStatus> getTrafficStatus(String intersectionId);
+
+    Flux<TrafficStatus> liveTraffic(String intersectionId);
 }
