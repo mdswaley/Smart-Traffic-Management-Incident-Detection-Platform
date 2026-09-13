@@ -4,6 +4,7 @@ import com.mdswaley.traffic.smart_traffic_management.Model.TrafficEvent;
 import com.mdswaley.traffic.smart_traffic_management.Model.TrafficStatus;
 import com.mdswaley.traffic.smart_traffic_management.Service.TrafficService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,7 +31,7 @@ public class TrafficController {
         return trafficService.getTrafficStatus(intersectionId);
     }
 
-    @GetMapping("/live/{intersectionId}")
+    @GetMapping(value = "/live/{intersectionId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<TrafficStatus> getLiveUpdate(@PathVariable String intersectionId){
         return trafficService.liveTraffic(intersectionId);
     }
