@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service
@@ -48,5 +49,16 @@ public class TrafficServiceImp implements TrafficService{
                 .flatMap(trafficAnalyzer::analyze)
                 .switchIfEmpty(Mono.error(new TrafficDataNotFoundException(
                         "No traffic data found for intersection: " + intersectionId)));
+    }
+
+    @Override
+    public Flux<TrafficStatus> liveTraffic(String intersectionId) {
+        return Flux.interval(Duration.ofSeconds(5))
+                .flatMap(tick -> repository
+                        .findByIntersectionId(intersectionId)
+                        .sort((event1, event2) -> event2.getTimestamp()
+                                .compareTo(event1.getTimestamp()))
+                .next()
+                .flatMap(trafficAnalyzer::analyze));
     }
 }
