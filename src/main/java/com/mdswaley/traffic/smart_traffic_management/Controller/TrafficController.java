@@ -20,7 +20,6 @@ public class TrafficController {
         return trafficService.saveEvent(event);
     }
 
-
     @GetMapping("/intersections/{id}/events")
     public Flux<TrafficEvent> getEvents(@PathVariable String id) {
         return trafficService.getEvents(id);
@@ -29,5 +28,10 @@ public class TrafficController {
     @GetMapping("/status/{intersectionId}")
     public Mono<TrafficStatus> getTrafficStatus(@PathVariable String intersectionId) {
         return trafficService.getTrafficStatus(intersectionId);
+    }
+
+    @GetMapping("/live/{intersectionId}")
+    public Flux<TrafficStatus> getLiveUpdate(@PathVariable String intersectionId){
+        return trafficService.liveTraffic(intersectionId);
     }
 }
