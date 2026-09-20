@@ -25,4 +25,8 @@ public class TrafficEvent {
     private int waitingVehicles;
 
     private LocalDateTime timestamp;
+
+    private boolean emergencyVehicle;
+
+    private String emergencyVehicleType;
 }
