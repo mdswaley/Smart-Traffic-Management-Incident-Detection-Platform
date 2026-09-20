@@ -1,6 +1,8 @@
 package com.mdswaley.traffic.smart_traffic_management.Analyzer;
 
+import com.mdswaley.traffic.smart_traffic_management.Model.EmergencyVehicleType;
 import com.mdswaley.traffic.smart_traffic_management.Model.TrafficEvent;
+import com.mdswaley.traffic.smart_traffic_management.Model.TrafficPriority;
 import com.mdswaley.traffic.smart_traffic_management.Model.TrafficStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -14,17 +16,45 @@ public class TrafficAnalyzer {
 
         String status = determineStatus(score);
 
+        TrafficPriority priority = determinePriority(event, status);
+
         TrafficStatus status1 = new TrafficStatus(
                 event.getIntersectionId(),
                 status,
                 score,
                 event.getVehicleCount(),
                 event.getWaitingVehicles(),
-                event.getAverageSpeed()
+                event.getAverageSpeed(),
+                event.getEmergencyVehicleType(),
+                priority
         );
-
         return Mono.just(status1);
     }
+
+    private TrafficPriority determinePriority(TrafficEvent event, String status) {
+
+        // Ambulance always gets the highest priority
+        if (event.isEmergencyVehicle()
+                && event.getEmergencyVehicleType().equals(EmergencyVehicleType.AMBULANCE)) {
+
+            return TrafficPriority.AMBULANCE;
+        }
+
+        // Other emergency vehicles
+        if (event.isEmergencyVehicle()) {
+            return TrafficPriority.EMERGENCY;
+        }
+
+        // Heavy traffic
+        if (status.equals("HIGH")
+                || status.equals("CRITICAL")) {
+
+            return TrafficPriority.HIGH;
+        }
+
+        return TrafficPriority.NORMAL;
+    }
+
     private double calculateScore(TrafficEvent event) {
 
         // ---------------------------------------------------------

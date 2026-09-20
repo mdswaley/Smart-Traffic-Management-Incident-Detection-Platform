@@ -13,4 +13,6 @@ public class TrafficStatus {
     private int vehicleCount;
     private int waitingVehicles;
     private double averageSpeed;
+    private String vehicleType;
+    private TrafficPriority priority;
 }
