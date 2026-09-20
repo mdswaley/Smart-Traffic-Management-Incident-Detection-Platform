@@ -1,171 +1,437 @@
-# 🚦 Smart Traffic Management & Incident Detection Platform
+# Smart Traffic Management & Incident Detection Platform
 
-A reactive, real-time traffic management platform built with **Spring Boot WebFlux**, **Reactive MongoDB**, and **Project Reactor**.
+A reactive Spring Boot application for monitoring traffic conditions, calculating congestion levels, detecting emergency vehicles, and assigning traffic-management priority.
 
-The goal of this project is to process traffic sensor events, analyze congestion, detect incidents, provide real-time traffic updates, and eventually optimize traffic signals.
+The project is designed as a foundation for a smart traffic-management system that can later support real-time traffic streaming, incident detection, emergency-vehicle route prioritization, and intelligent traffic-signal optimization.
 
 ---
 
-## 📌 Project Overview
+## 🚦 Project Overview
 
-Modern cities generate large amounts of traffic data from sensors installed at intersections and roads.
+The **Smart Traffic Management & Incident Detection Platform** collects traffic information for road intersections and analyzes:
 
-This project simulates a smart traffic management system that receives information such as:
-
-* Vehicle count
+* Number of vehicles
+* Number of waiting vehicles
 * Average vehicle speed
-* Waiting vehicles
-* Traffic density
-* Traffic-light status
-* Accidents/incidents
-* Emergency vehicles
+* Traffic congestion level
+* Emergency vehicle presence
+* Emergency vehicle type
+* Traffic priority
 
-The system processes these events reactively and calculates the current traffic condition.
+The system calculates a congestion score from `0–100` and classifies the traffic condition as:
 
-The project is also designed as a **learning project for Spring WebFlux and Reactive Programming**, gradually evolving from a single WebFlux application into an event-driven architecture using Kafka and microservices.
+|       Score | Traffic Status |
+| ----------: | -------------- |
+|      `< 25` | LOW            |
+| `25 – < 50` | MEDIUM         |
+| `50 – < 75` | HIGH           |
+|     `>= 75` | CRITICAL       |
 
----
+In addition to congestion, emergency vehicles receive a separate priority level.
 
-# 🎯 Project Goals
+### Emergency Priority
 
-The main goals are:
+| Condition              | Priority    |
+| ---------------------- | ----------- |
+| Normal traffic         | `NORMAL`    |
+| Heavy/critical traffic | `HIGH`      |
+| Emergency vehicle      | `EMERGENCY` |
+| Ambulance              | `AMBULANCE` |
 
-1. Learn Spring WebFlux practically.
-2. Understand `Mono` and `Flux`.
-3. Work with reactive MongoDB.
-4. Learn Project Reactor operators.
-5. Implement real-time streaming using SSE.
-6. Understand backpressure.
-7. Implement functional WebFlux.
-8. Introduce Kafka for event streaming.
-9. Detect traffic incidents.
-10. Prioritize emergency vehicles.
-11. Optimize traffic signal timings.
-12. Eventually evolve the application into microservices.
+An ambulance does **not artificially increase the congestion score**. Instead, congestion and emergency priority are treated as separate concepts.
 
 ---
 
-# 🏗️ Current Architecture
-
-At the current stage, the application is intentionally kept as a **single Spring Boot WebFlux application**.
+# 🏗️ Architecture
 
 ```text
-                  Traffic Sensor
-                       │
-                       │ Traffic Event
-                       ▼
-              ┌──────────────────┐
-              │ Traffic Controller│
-              │     WebFlux       │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │ Traffic Service  │
-              └────────┬─────────┘
-                       │
-                       ▼
-             Reactive MongoDB
-                       │
-                       ▼
-              Traffic Analyzer
-                       │
-                       ▼
-              Traffic Status
-                       │
-                       ▼
-                  SSE Stream
-                       │
-                       ▼
-                Live Dashboard
+                    ┌──────────────────────┐
+                    │       Client         │
+                    │ Postman / Frontend   │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │ Traffic Controller   │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │   Traffic Service    │
+                    │    / ServiceImpl     │
+                    └──────────┬───────────┘
+                               │
+                 ┌─────────────┴─────────────┐
+                 ▼                           ▼
+        ┌─────────────────┐         ┌─────────────────┐
+        │ Mongo Repository│         │ Traffic Analyzer│
+        └────────┬────────┘         └────────┬────────┘
+                 │                           │
+                 ▼                           ▼
+        ┌─────────────────┐         ┌─────────────────┐
+        │    MongoDB      │         │ Congestion      │
+        │ traffic_events  │         │ + Priority      │
+        └─────────────────┘         └────────┬────────┘
+                                             │
+                                             ▼
+                                    ┌──────────────────┐
+                                    │ Traffic Status   │
+                                    └──────────────────┘
 ```
-
-Kafka and microservices will be introduced in later stages.
 
 ---
 
 # 🛠️ Technology Stack
 
-## Backend
-
-* Java
-* Spring Boot
-* Spring WebFlux
-* Project Reactor
-* Spring Data Reactive MongoDB
-
-## Database
-
-* MongoDB
-
-## Event Streaming
-
-Planned:
-
-* Apache Kafka
-
-## Real-Time Communication
-
-* Server-Sent Events (SSE)
-
-## Build Tool
-
-* Maven
-
-## Future Infrastructure
-
-* Docker
-* Docker Compose
+* **Java**
+* **Spring Boot**
+* **Spring WebFlux**
+* **Spring Data MongoDB Reactive**
+* **MongoDB**
+* **Project Reactor**
+* **Lombok**
+* **Maven**
+* **Postman**
+* **Git / GitHub**
 
 ---
 
-# 📂 Project Structure
-
-Current project structure:
+# 📁 Project Structure
 
 ```text
-smart-traffic-management
-│
-├── src
-│   └── main
-│       ├── java
-│       │   └── com.example.traffic
-│       │       │
-│       │       ├── analyzer
-│       │       │   └── TrafficAnalyzer.java
-│       │       │
-│       │       ├── controller
-│       │       │   └── TrafficController.java
-│       │       │
-│       │       ├── exception
-│       │       │   ├── GlobalExceptionHandler.java
-│       │       │   └── TrafficDataNotFoundException.java
-│       │       │
-│       │       ├── model
-│       │       │   ├── TrafficEvent.java
-│       │       │   └── TrafficStatus.java
-│       │       │
-│       │       ├── repository
-│       │       │   └── TrafficEventRepository.java
-│       │       │
-│       │       └── service
-│       │           ├── TrafficService.java
-│       │           └── BackpressureService.java
-│       │
-│       └── resources
-│           └── application.yml
-│
-├── pom.xml
-└── README.md
+src
+└── main
+    └── java
+        └── com.mdswaley.traffic.smart_traffic_management
+            │
+            ├── Analyzer
+            │   └── TrafficAnalyzer.java
+            │
+            ├── Controller
+            │   └── TrafficController.java
+            │
+            ├── Model
+            │   ├── TrafficEvent.java
+            │   ├── TrafficStatus.java
+            │   └── EmergencyVehicleType.java
+            │
+            ├── Repository
+            │   └── TrafficEventRepository.java
+            │
+            ├── Service
+            │   ├── TrafficService.java
+            │   └── TrafficServiceImp.java
+            │
+            └── error
+                └── TrafficDataNotFoundException.java
+```
+
+---
+
+# 🚗 Traffic Event
+
+A traffic event represents the current traffic condition at an intersection.
+
+Example:
+
+```json
+{
+    "intersectionId": "I002",
+    "roadId": "ROAD_A",
+    "vehicleCount": 50,
+    "averageSpeed": 15,
+    "waitingVehicles": 20,
+    "emergencyVehicle": false,
+    "emergencyVehicleType": "NONE"
+}
+```
+
+### Fields
+
+| Field                  | Description                             |
+| ---------------------- | --------------------------------------- |
+| `intersectionId`       | Unique intersection identifier          |
+| `roadId`               | Road associated with the event          |
+| `vehicleCount`         | Number of vehicles                      |
+| `averageSpeed`         | Average vehicle speed                   |
+| `waitingVehicles`      | Number of waiting vehicles              |
+| `timestamp`            | Event creation time                     |
+| `emergencyVehicle`     | Whether an emergency vehicle is present |
+| `emergencyVehicleType` | Type of emergency vehicle               |
+
+Supported emergency vehicle types:
+
+```text
+NONE
+AMBULANCE
+FIRE_TRUCK
+POLICE
+```
+
+---
+
+# 📊 Congestion Score
+
+The congestion score is calculated using three traffic factors.
+
+```text
+Vehicle Count     → 40%
+Waiting Vehicles  → 40%
+Average Speed     → 20%
+```
+
+The formula is:
+
+```java
+vehicleScore = Math.min(vehicleCount, 100);
+
+waitingScore = Math.min(waitingVehicles, 100);
+
+speedScore = Math.max(0, 100 - (averageSpeed * 5));
+
+score =
+    (vehicleScore * 0.4)
+    + (waitingScore * 0.4)
+    + (speedScore * 0.2);
+```
+
+## Why 40%, 40%, 20%?
+
+The current implementation gives:
+
+* Vehicle count: **40%**
+* Waiting vehicles: **40%**
+* Average speed: **20%**
+
+These are configurable design assumptions for the current version and can later be calibrated using real traffic data.
+
+## Why `averageSpeed * 5`?
+
+The current model converts speed into an inverse congestion contribution.
+
+For example:
+
+```text
+0 km/h  → 100
+5 km/h  → 75
+10 km/h → 50
+15 km/h → 25
+20 km/h → 0
+```
+
+The multiplier `5` is a scaling factor used by the current model. It can later be adjusted based on real-world traffic data.
+
+---
+
+# 🚑 Emergency Vehicle Priority
+
+Emergency vehicles are handled separately from congestion scoring.
+
+For example:
+
+```text
+Congestion Score = 33
+Traffic Status   = MEDIUM
+Emergency       = AMBULANCE
+Priority        = AMBULANCE
+```
+
+The ambulance does not change the congestion score from `33` to another value.
+
+Instead, it creates a separate priority signal for future traffic-signal optimization.
+
+### Priority Logic
+
+```text
+                    Traffic Event
+                         │
+                         ▼
+                Emergency Vehicle?
+                    /          \
+                  No            Yes
+                  │              │
+                  ▼              ▼
+               NORMAL      Emergency Type
+                              │
+                    ┌─────────┼─────────┐
+                    ▼         ▼         ▼
+                AMBULANCE  FIRE_TRUCK  POLICE
+                    │         │         │
+                    ▼         └────┬────┘
+               AMBULANCE          │
+               PRIORITY        EMERGENCY
+```
+
+Ambulances receive the highest priority because the system needs to support future emergency-route and traffic-signal prioritization.
+
+---
+
+# 🔌 API Endpoints
+
+## Create Traffic Event
+
+```http
+POST /api/traffic/events
+```
+
+Example request:
+
+```json
+{
+    "intersectionId": "I002",
+    "roadId": "ROAD_A",
+    "vehicleCount": 50,
+    "averageSpeed": 15,
+    "waitingVehicles": 20,
+    "emergencyVehicle": false,
+    "emergencyVehicleType": "NONE"
+}
+```
+
+---
+
+## Create Ambulance Traffic Event
+
+```http
+POST /api/traffic/events
+```
+
+Example:
+
+```json
+{
+    "intersectionId": "I002",
+    "roadId": "ROAD_A",
+    "vehicleCount": 50,
+    "averageSpeed": 15,
+    "waitingVehicles": 20,
+    "emergencyVehicle": true,
+    "emergencyVehicleType": "AMBULANCE"
+}
+```
+
+---
+
+## Get Traffic Events
+
+```http
+GET /api/traffic/events/{intersectionId}
+```
+
+Example:
+
+```http
+GET /api/traffic/events/I002
+```
+
+Returns traffic events associated with the intersection.
+
+---
+
+## Get Current Traffic Status
+
+```http
+GET /api/traffic/status/{intersectionId}
+```
+
+Example:
+
+```http
+GET /api/traffic/status/I002
+```
+
+Example response:
+
+```json
+{
+    "intersectionId": "I002",
+    "status": "MEDIUM",
+    "congestionScore": 33.0,
+    "vehicleCount": 50,
+    "waitingVehicles": 20,
+    "averageSpeed": 15.0,
+    "vehicleType": "AMBULANCE",
+    "priority": "AMBULANCE"
+}
+```
+
+---
+
+## Live Traffic
+
+```http
+GET /api/traffic/live/{intersectionId}
+```
+
+The application periodically retrieves the latest traffic information and analyzes it reactively.
+
+---
+
+# 🔄 Reactive Processing
+
+The application uses **Spring WebFlux** and **Project Reactor**.
+
+The service layer uses:
+
+```java
+Mono<TrafficStatus>
+```
+
+for a single traffic status and:
+
+```java
+Flux<TrafficEvent>
+```
+
+for multiple traffic events.
+
+Example:
+
+```java
+return repository
+        .findByIntersectionId(intersectionId)
+        .sort((event1, event2) ->
+                event2.getTimestamp()
+                        .compareTo(event1.getTimestamp()))
+        .next()
+        .flatMap(trafficAnalyzer::analyze);
+```
+
+This allows traffic data to be processed using a non-blocking reactive approach.
+
+---
+
+# 🗄️ MongoDB
+
+Traffic events are stored in:
+
+```text
+traffic_events
+```
+
+MongoDB is used because traffic events are naturally represented as flexible documents and the schema can evolve as new traffic information is introduced.
+
+Example document:
+
+```json
+{
+    "_id": "...",
+    "intersectionId": "I002",
+    "roadId": "ROAD_A",
+    "vehicleCount": 50,
+    "averageSpeed": 15.0,
+    "waitingVehicles": 20,
+    "timestamp": "...",
+    "emergencyVehicle": true,
+    "emergencyVehicleType": "AMBULANCE"
+}
 ```
 
 ---
 
 # ⚙️ Configuration
 
-The application uses MongoDB.
-
-`application.yml`:
+Example `application.yml`:
 
 ```yaml
 spring:
@@ -180,658 +446,37 @@ server:
   port: 8080
 ```
 
-MongoDB must be running before starting the application.
-
----
-
-# 📦 Maven Dependencies
-
-The main dependencies are:
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-webflux</artifactId>
-</dependency>
-
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
-</dependency>
-```
-
----
-
-# 🚦 Traffic Event
-
-A traffic sensor sends an event containing information about an intersection.
-
-Example:
-
-```json
-{
-  "intersectionId": "I001",
-  "roadId": "ROAD_A",
-  "vehicleCount": 85,
-  "averageSpeed": 12.5,
-  "waitingVehicles": 40,
-  "timestamp": "2026-09-13T20:00:00"
-}
-```
-
----
-
-# 📊 Traffic Status
-
-The system analyzes traffic events and generates a traffic status.
-
-Possible statuses:
-
-```text
-LOW
-MEDIUM
-HIGH
-CRITICAL
-```
-
-Example response:
-
-```json
-{
-  "intersectionId": "I001",
-  "status": "HIGH",
-  "congestionScore": 68.5,
-  "vehicleCount": 85,
-  "waitingVehicles": 40,
-  "averageSpeed": 12.5
-}
-```
-
----
-
-# 🔌 REST APIs
-
-## 1. Submit Traffic Event
-
-```http
-POST /api/traffic/events
-```
-
-### Request
-
-```json
-{
-  "intersectionId": "I001",
-  "roadId": "ROAD_A",
-  "vehicleCount": 85,
-  "averageSpeed": 12.5,
-  "waitingVehicles": 40
-}
-```
-
-### Response
-
-```json
-{
-  "id": "68c...",
-  "intersectionId": "I001",
-  "roadId": "ROAD_A",
-  "vehicleCount": 85,
-  "averageSpeed": 12.5,
-  "waitingVehicles": 40,
-  "timestamp": "2026-09-13T20:00:00"
-}
-```
-
----
-
-## 2. Get Traffic Events
-
-```http
-GET /api/traffic/events/{intersectionId}
-```
-
-Example:
-
-```http
-GET /api/traffic/events/I001
-```
-
-Returns:
-
-```text
-Flux<TrafficEvent>
-```
-
----
-
-## 3. Get Current Traffic Status
-
-```http
-GET /api/traffic/status/{intersectionId}
-```
-
-Example:
-
-```http
-GET /api/traffic/status/I001
-```
-
-Returns:
-
-```text
-Mono<TrafficStatus>
-```
-
----
-
-## 4. Live Traffic Stream
-
-```http
-GET /api/traffic/live/{intersectionId}
-```
-
-The endpoint uses:
-
-```text
-text/event-stream
-```
-
-and continuously sends traffic updates.
-
-Example:
-
-```text
-data: {"intersectionId":"I001","status":"MEDIUM",...}
-
-data: {"intersectionId":"I001","status":"HIGH",...}
-
-data: {"intersectionId":"I001","status":"CRITICAL",...}
-```
-
----
-
-# 🧠 Reactive Programming Concepts
-
-This project is designed to demonstrate the following Project Reactor concepts.
-
-## Mono
-
-Used when there is zero or one result.
-
-Example:
-
-```java
-Mono<TrafficStatus>
-```
-
----
-
-## Flux
-
-Used when multiple values are emitted.
-
-Example:
-
-```java
-Flux<TrafficEvent>
-```
-
----
-
-## map()
-
-Used to transform one object into another.
-
-```java
-.map(trafficAnalyzer::analyze)
-```
-
-Conceptually:
-
-```text
-TrafficEvent
-     ↓
-    map()
-     ↓
-TrafficStatus
-```
-
----
-
-## flatMap()
-
-Used when the transformation itself returns a reactive type.
-
-```java
-.flatMap(trafficAnalyzer::analyze)
-```
-
-Conceptually:
-
-```text
-Mono<TrafficEvent>
-       ↓
-    flatMap()
-       ↓
-Mono<TrafficStatus>
-```
-
----
-
-## filter()
-
-Used to remove invalid sensor data.
-
-```java
-.filter(event ->
-        event.getVehicleCount() >= 0
-        && event.getWaitingVehicles() >= 0
-        && event.getAverageSpeed() >= 0
-)
-```
-
----
-
-## next()
-
-Used to retrieve the latest event from a `Flux`.
-
-```java
-.next()
-```
-
-Converts:
-
-```text
-Flux<TrafficEvent>
-```
-
-into:
-
-```text
-Mono<TrafficEvent>
-```
-
----
-
-## switchIfEmpty()
-
-Used when no valid traffic data exists.
-
-```java
-.switchIfEmpty(
-    Mono.error(
-        new TrafficDataNotFoundException(...)
-    )
-)
-```
-
----
-
-# 🔄 Reactive Traffic Pipeline
-
-The current traffic-status pipeline is:
-
-```text
-MongoDB
-   │
-   ▼
-Flux<TrafficEvent>
-   │
-   ▼
-filter()
-   │
-   ▼
-sort()
-   │
-   ▼
-next()
-   │
-   ▼
-Mono<TrafficEvent>
-   │
-   ▼
-flatMap()
-   │
-   ▼
-Mono<TrafficStatus>
-```
-
----
-
-# 🌐 Real-Time SSE
-
-The live endpoint currently uses a periodic reactive stream.
-
-```java
-Flux.interval(Duration.ofSeconds(5))
-```
-
-Conceptually:
-
-```text
-Every 5 seconds
-      │
-      ▼
-Find latest event
-      │
-      ▼
-Analyze traffic
-      │
-      ▼
-TrafficStatus
-      │
-      ▼
-SSE
-```
-
-This provides a foundation for a future real-time traffic dashboard.
-
----
-
-# 🔙 Backpressure
-
-The project also contains a backpressure experiment.
-
-The producer can generate events faster than the consumer can process them.
-
-```text
-Producer
-   │
-   │ 100 events/sec
-   ▼
-Reactive Pipeline
-   │
-   │ 10 events/sec
-   ▼
-Consumer
-```
-
-The project demonstrates:
-
-```java
-onBackpressureBuffer()
-onBackpressureDrop()
-onBackpressureLatest()
-```
-
-### Buffer
-
-Keeps pending events.
-
-```java
-.onBackpressureBuffer()
-```
-
-### Drop
-
-Drops events when the downstream cannot keep up.
-
-```java
-.onBackpressureDrop()
-```
-
-### Latest
-
-Keeps the latest available value.
-
-```java
-.onBackpressureLatest()
-```
-
-For a live traffic dashboard, keeping the latest state can be more useful than processing every intermediate sensor reading.
-
----
-
-# 🚨 Planned Incident Detection
-
-The next stages will introduce incident detection.
-
-Potential incident types:
-
-```text
-ACCIDENT
-EMERGENCY_VEHICLE
-ROAD_BLOCK
-ABNORMAL_CONGESTION
-```
-
-Example accident detection concept:
-
-```text
-Sudden speed decrease
-        +
-Large number of waiting vehicles
-        +
-Abnormal traffic pattern
-        ↓
-ACCIDENT SUSPECTED
-```
-
----
-
-# 🚑 Emergency Vehicle Priority
-
-The system will eventually support emergency vehicles such as:
-
-```text
-AMBULANCE
-FIRE_TRUCK
-POLICE
-```
-
-Concept:
-
-```text
-Emergency Vehicle Detected
-          │
-          ▼
-Identify Route
-          │
-          ▼
-Identify Intersections
-          │
-          ▼
-Prioritize Traffic Signals
-          │
-          ▼
-       GREEN
-          │
-          ▼
-Emergency Vehicle Passes
-          │
-          ▼
-Restore Normal Signal Plan
-```
-
----
-
-# 🚥 Traffic Signal Optimization
-
-The system will eventually calculate signal durations dynamically.
-
-Example:
-
-```text
-Intersection I001
-
-ROAD_A → 90 vehicles
-ROAD_B → 20 vehicles
-ROAD_C → 15 vehicles
-ROAD_D → 10 vehicles
-```
-
-Instead of:
-
-```text
-Every road → GREEN 30 sec
-```
-
-the optimizer may calculate:
-
-```text
-ROAD_A → GREEN 90 sec
-ROAD_B → GREEN 30 sec
-ROAD_C → GREEN 20 sec
-ROAD_D → GREEN 20 sec
-```
-
-The actual optimization algorithm will be developed in a later phase.
-
----
-
-# 📨 Future Kafka Architecture
-
-The current application uses MongoDB polling for the live-stream learning exercise.
-
-The target architecture will eventually become event-driven:
-
-```text
-Traffic Sensors
-      │
-      ▼
-Traffic Gateway
-      │
-      ▼
-    Kafka
-      │
-      ▼
-Traffic Processing Service
-      │
-      ├──────────────┐
-      ▼              ▼
-Traffic Analyzer   Incident Detector
-      │              │
-      └───────┬──────┘
-              ▼
-       Signal Optimizer
-              │
-              ▼
-           MongoDB
-              │
-              ▼
-        SSE / WebSocket
-              │
-              ▼
-       Traffic Dashboard
-```
-
----
-
-# 🧩 Future Microservices
-
-After the reactive concepts are completed, the application will be split into services such as:
-
-```text
-traffic-gateway
-traffic-processing
-traffic-analyzer
-incident-detector
-signal-optimizer
-dashboard-api
-```
-
-The application will **not** start as microservices. The monolithic reactive application is intentional so that the WebFlux concepts can be learned first.
-
----
-
-# 🗺️ Development Roadmap
-
-```text
-[✓] Step 1 — Spring WebFlux project setup
-
-[✓] Step 2 — Reactive MongoDB
-
-[✓] Step 3 — Traffic congestion analysis
-
-[✓] Step 4 — Reactive operators & error handling
-
-[✓] Step 5 — Flux + Server-Sent Events
-
-[✓] Step 6 — Backpressure
-
-[ ] Step 7 — Functional WebFlux
-
-[ ] Step 8 — Advanced traffic event processing
-
-[ ] Step 9 — Windowing & aggregation
-
-[ ] Step 10 — Kafka integration
-
-[ ] Step 11 — Incident detection
-
-[ ] Step 12 — Emergency vehicle priority
-
-[ ] Step 13 — Traffic signal optimization
-
-[ ] Step 14 — Dashboard
-
-[ ] Step 15 — Microservices
-
-[ ] Step 16 — Docker & deployment
-```
-
----
-
-# 🧪 Testing Strategy
-
-The project should eventually contain tests for:
-
-### Controller
-
-```text
-POST /api/traffic/events
-GET  /api/traffic/events/{id}
-GET  /api/traffic/status/{id}
-GET  /api/traffic/live/{id}
-```
-
-### Service
-
-Test:
-
-```text
-Valid traffic event
-Invalid traffic event
-No traffic data
-Traffic status calculation
-```
-
-### Reactive Streams
-
-Test:
-
-```text
-Mono
-Flux
-filter
-map
-flatMap
-switchIfEmpty
-Backpressure
-SSE
-```
+Adjust the MongoDB URI according to your local environment.
 
 ---
 
 # ▶️ Running the Application
 
-## 1. Start MongoDB
+## 1. Clone the repository
 
-Make sure MongoDB is running on:
-
-```text
-localhost:27017
+```bash
+git clone https://github.com/mdswaley/Smart-Traffic-Management-Incident-Detection-Platform.git
 ```
 
-Database:
+## 2. Open the project
+
+Open the project in:
+
+* IntelliJ IDEA
+* Eclipse
+* VS Code
+
+## 3. Start MongoDB
+
+Make sure MongoDB is running locally.
+
+Default MongoDB port:
 
 ```text
-smart_traffic_management
+27017
 ```
 
-## 2. Start the application
+## 4. Run Spring Boot
 
 Using Maven:
 
@@ -839,13 +484,15 @@ Using Maven:
 ./mvnw spring-boot:run
 ```
 
-or on Windows:
+Windows:
 
 ```bash
 mvnw.cmd spring-boot:run
 ```
 
-The application runs on:
+Or run the main Spring Boot application from IntelliJ IDEA.
+
+The application will start on:
 
 ```text
 http://localhost:8080
@@ -853,83 +500,151 @@ http://localhost:8080
 
 ---
 
-# 🔍 Example Development Flow
+# 🧪 Testing With Postman
 
-A typical development/test flow is:
+Recommended testing sequence:
+
+### 1. Normal traffic
+
+```json
+{
+    "intersectionId": "I002",
+    "roadId": "ROAD_A",
+    "vehicleCount": 50,
+    "averageSpeed": 15,
+    "waitingVehicles": 20,
+    "emergencyVehicle": false,
+    "emergencyVehicleType": "NONE"
+}
+```
+
+### 2. Ambulance
+
+```json
+{
+    "intersectionId": "I002",
+    "roadId": "ROAD_A",
+    "vehicleCount": 50,
+    "averageSpeed": 15,
+    "waitingVehicles": 20,
+    "emergencyVehicle": true,
+    "emergencyVehicleType": "AMBULANCE"
+}
+```
+
+### 3. Check status
+
+```http
+GET /api/traffic/status/I002
+```
+
+Verify:
 
 ```text
-1. Start MongoDB
-       ↓
-2. Start Spring Boot
-       ↓
-3. POST traffic event
-       ↓
-4. Event stored in MongoDB
-       ↓
-5. Request traffic status
-       ↓
-6. TrafficAnalyzer calculates score
-       ↓
-7. Request live endpoint
-       ↓
-8. Receive traffic updates through SSE
+status = MEDIUM
+congestionScore = 33.0
+priority = AMBULANCE
 ```
 
 ---
 
-# 📚 Learning Objectives
+# 🧭 Current Development Progress
 
-By completing this project, you should be comfortable with:
-
-* Reactive programming
-* Spring WebFlux
-* `Mono`
-* `Flux`
-* Reactive MongoDB
-* Reactive repositories
-* Project Reactor operators
-* Error handling in reactive pipelines
-* Server-Sent Events
-* Backpressure
-* Functional WebFlux
-* Reactive event processing
-* Kafka
-* Event-driven architecture
-* Microservices
+```text
+[x] Spring Boot project setup
+[x] MongoDB configuration
+[x] TrafficEvent model
+[x] TrafficStatus model
+[x] Reactive repository
+[x] Traffic service
+[x] Traffic analyzer
+[x] Congestion score calculation
+[x] Traffic status classification
+[x] Emergency vehicle detection
+[x] Ambulance priority
+[x] Fire truck / police emergency priority
+[ ] Traffic signal optimizer
+[ ] Emergency vehicle route prioritization
+[ ] Green corridor for ambulances
+[ ] Real-time event streaming
+[ ] Incident detection
+[ ] Kafka integration
+[ ] WebSocket/SSE frontend
+[ ] Traffic dashboard
+```
 
 ---
 
-# 🚀 Final Vision
+# 🚀 Future Architecture
 
-The final platform will process traffic events in real time and provide intelligent traffic-management decisions.
+The planned system will evolve toward:
 
 ```text
-                    ┌─────────────────┐
-                    │ Traffic Sensors │
-                    └────────┬────────┘
-                             │
-                             ▼
-                         Kafka
-                             │
-                             ▼
-                 ┌─────────────────────┐
-                 │ Traffic Processing  │
-                 └──────────┬──────────┘
-                            │
-             ┌──────────────┼──────────────┐
-             ▼              ▼              ▼
-        Traffic         Incident        Emergency
-        Analyzer        Detector         Handler
-             │              │              │
-             └──────────────┼──────────────┘
-                            ▼
-                    Signal Optimizer
-                            │
-                            ▼
-                         MongoDB
-                            │
-                            ▼
-                    Real-Time Dashboard
+Traffic Sensors
+      │
+      ▼
+Traffic Events
+      │
+      ▼
+Kafka / Event Stream
+      │
+      ▼
+Traffic Analyzer
+      │
+      ├───────────────┐
+      ▼               ▼
+Congestion       Emergency
+Analysis         Detection
+      │               │
+      └───────┬───────┘
+              ▼
+       Signal Optimizer
+              │
+       ┌──────┴───────┐
+       ▼              ▼
+Normal Traffic   Emergency Route
+Optimization     Prioritization
+                      │
+                      ▼
+                 Ambulance
+                 Green Corridor
 ```
 
-The ultimate objective is a **reactive, event-driven smart traffic management platform** capable of processing continuous traffic data, identifying incidents, prioritizing emergency vehicles, and dynamically optimizing traffic signals.
+---
+
+# 🎯 Project Goals
+
+The long-term goal is to build a smart traffic-management platform capable of:
+
+1. Monitoring traffic in real time.
+2. Detecting traffic congestion.
+3. Detecting traffic incidents.
+4. Identifying emergency vehicles.
+5. Giving ambulances high-priority treatment.
+6. Optimizing traffic signals.
+7. Creating emergency green corridors.
+8. Processing traffic events reactively.
+9. Supporting scalable event streaming.
+10. Providing a real-time traffic dashboard.
+
+---
+
+# 👨‍💻 Development Approach
+
+The project is being developed incrementally.
+
+Current focus:
+
+```text
+Traffic Data
+     ↓
+Congestion Analysis
+     ↓
+Emergency Vehicle Detection
+     ↓
+Priority Assignment
+     ↓
+Traffic Signal Optimization
+```
+
+The next major feature is the **Traffic Signal Optimizer**, which will use the `AMBULANCE` priority to determine how an intersection should respond when an ambulance is approaching.
